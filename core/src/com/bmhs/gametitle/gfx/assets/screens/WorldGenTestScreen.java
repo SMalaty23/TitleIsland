@@ -47,7 +47,8 @@ public class WorldGenTestScreen implements Screen {
         viewport = new FitViewport(Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), camera);
         viewport.setScreenBounds(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 
-        world = new World(10, 30);
+        // change number of rows and columns to change the size of the world
+        world = new World(100, 300);
 
         camera.update();
     }
