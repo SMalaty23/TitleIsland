@@ -42,6 +42,7 @@ public class WorldGenerator {
         //leftCoast();
         //centralSea();
         water();
+        seedMap();
 
         generateWorldTextFile();
 
@@ -69,25 +70,22 @@ public class WorldGenerator {
         }
     }
 
-    public void leftCoast() {
+    public void seedMap() {
+        Vector2 mapSeed = new Vector2(MathUtils.random(worldIntMap[0].length), MathUtils.random(worldIntMap.length));
         for(int r = 0; r < worldIntMap.length; r++) {
             for(int c = 0; c < worldIntMap[r].length; c++) {
-                if(c > worldIntMap[r].length-1) {
-                    worldIntMap[r][c] = 0;
+                Vector2 tempVector = new Vector2(c,r);
+                if(tempVector.dst(mapSeed) < 10) {
+                    worldIntMap[r][c] = 19;
+
                 }
             }
         }
     }
 
-    public void centralSea() {
-        for(int r = 0; r < worldIntMap.length; r++) {
-            for(int c = 0; c < worldIntMap[r].length; c++) {
-                if(c < 10) {
-                    worldIntMap[r][c] = 3;
-                }
-            }
-        }
-    }
+
+
+
 
     public void randomize() {
         for(int r = 0; r < worldIntMap.length; r++) {
