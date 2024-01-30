@@ -15,13 +15,17 @@ public class WorldGenerator {
 
     private int[][] worldIntMap;
 
+    private int seedColor, lightGreen, Green;
+
     public WorldGenerator (int worldMapRows, int worldMapColumns) {
         this.worldMapRows = worldMapRows;
         this.worldMapColumns = worldMapColumns;
 
         worldIntMap = new int[worldMapRows][worldMapColumns];
-
+        seedColor =10;
+        lightGreen = 17;
         //call methods to build 2D array
+
 
         Vector2 mapSeed = new Vector2(MathUtils.random(worldIntMap[0].length), MathUtils.random(worldIntMap.length));
         System.out.println(mapSeed.y + "" + mapSeed.x);
@@ -42,11 +46,77 @@ public class WorldGenerator {
         //leftCoast();
         //centralSea();
         water();
-        seedMap();
+        seedIslands(5);
+        searchAndExpand(10,seedColor,lightGreen,0.25);
+        searchAndExpand(8,seedColor,16,0.75);
+        searchAndExpand(6,seedColor,15,0.65);
+        searchAndExpand(5,seedColor,14,0.55);
+        searchAndExpand(4,seedColor,13,0.45);
+        searchAndExpand(3,seedColor,12,0.35);
+
 
         generateWorldTextFile();
 
         Gdx.app.error("WorldGenerator", "WorldGenerator(WorldTile[][][])");
+    }
+
+    private void seedIslands(int num) {
+        for(int i = 0; i < num; i++) {
+            int rSeed = MathUtils.random(worldIntMap.length-1);
+            int cSeed = MathUtils.random(worldIntMap[0].length-1);
+            worldIntMap[rSeed][cSeed] = seedColor;
+        }
+    }
+    /*
+    private void searchAndExpand(int radius) {
+        for(int r = 0; r < worldIntMap.length; r++) {
+            for(int c = 0; c < worldIntMap[r].length; c++) {
+
+                if (worldIntMap[r][c]== seedColor) {
+
+                    for(int subRow = r - radius; subRow <= r+radius; subRow++) {
+                        for(int subCol = c - radius; subCol <= c+radius; subCol++)  {
+
+                            if(subRow >= 0 && subCol >= 0 && subRow <= worldIntMap.length-1 && subCol <= worldIntMap[0].length-1 && worldIntMap[subRow][subCol] !=seedColor) {
+                                worldIntMap[subRow][subCol] = 3;
+                            }
+                        }
+                    }
+                }
+
+
+            }
+
+
+
+        }
+    }
+
+     */
+
+    private void searchAndExpand(int radius, int numToFind, int numToWrite, double probability) {
+        for (int r = 0; r < worldIntMap.length; r++) {
+            for (int c = 0; c < worldIntMap[r].length; c++) {
+
+                if (worldIntMap[r][c] == numToFind) {
+
+                    for (int subRow = r - radius; subRow <= r + radius; subRow++) {
+                        for (int subCol = c - radius; subCol <= c + radius; subCol++) {
+
+                            if (subRow >= 0 && subCol >= 0 && subRow <= worldIntMap.length - 1 && subCol <= worldIntMap[0].length - 1 && worldIntMap[subRow][subCol] != numToFind) {
+                                if (Math.random() < probability) {
+                                    worldIntMap[subRow][subCol] = numToWrite;
+                                }
+                            }
+                        }
+                    }
+
+
+                }
+
+
+            }
+        }
     }
 
     public String getWorld3DArrayToString() {
@@ -69,7 +139,7 @@ public class WorldGenerator {
             }
         }
     }
-
+/*
     public void seedMap() {
         Vector2 mapSeed = new Vector2(MathUtils.random(worldIntMap[0].length), MathUtils.random(worldIntMap.length));
         for(int r = 0; r < worldIntMap.length; r++) {
@@ -82,6 +152,8 @@ public class WorldGenerator {
             }
         }
     }
+
+ */
 
 
 
