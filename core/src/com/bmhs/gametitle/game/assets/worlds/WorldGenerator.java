@@ -28,6 +28,7 @@ public class WorldGenerator {
 
 
         Vector2 mapSeed = new Vector2(MathUtils.random(worldIntMap[0].length), MathUtils.random(worldIntMap.length));
+        Vector3 mapSeed = new Vector3(MathUtils.random(worldIntMap[0].length), MathUtils.random(worldIntMap.length));
         System.out.println(mapSeed.y + "" + mapSeed.x);
 
         worldIntMap[(int)mapSeed.y][(int)mapSeed.x] = 4;
@@ -42,10 +43,11 @@ public class WorldGenerator {
             }
         }
 
-        //randomize();
+        randomize();
         //leftCoast();
         //centralSea();
         water();
+        seedMap();
         seedIslands(5);
         searchAndExpand(10,seedColor,lightGreen,0.25);
         searchAndExpand(8,seedColor,16,0.75);
@@ -106,18 +108,28 @@ public class WorldGenerator {
                             if (subRow >= 0 && subCol >= 0 && subRow <= worldIntMap.length - 1 && subCol <= worldIntMap[0].length - 1 && worldIntMap[subRow][subCol] != numToFind) {
                                 if (Math.random() < probability) {
                                     worldIntMap[subRow][subCol] = numToWrite;
+
+
                                 }
+
+
                             }
                         }
                     }
-
-
                 }
-
-
             }
         }
     }
+    private void multipleIslands(int num) {
+        Vector3 mapSeed = new Vector3(MathUtils.random(worldIntMap[0].length), MathUtils.random(worldIntMap.length))
+        for(int r = 0; r<worldIntMap.length; r++) {
+            for(int c = 0; c < worldIntMap[r].length; c+=) {
+
+            }
+        }
+
+    }
+
 
     public String getWorld3DArrayToString() {
         String returnString = "";
@@ -139,21 +151,21 @@ public class WorldGenerator {
             }
         }
     }
-/*
+
     public void seedMap() {
         Vector2 mapSeed = new Vector2(MathUtils.random(worldIntMap[0].length), MathUtils.random(worldIntMap.length));
         for(int r = 0; r < worldIntMap.length; r++) {
             for(int c = 0; c < worldIntMap[r].length; c++) {
                 Vector2 tempVector = new Vector2(c,r);
                 if(tempVector.dst(mapSeed) < 10) {
-                    worldIntMap[r][c] = 19;
+                    worldIntMap[r][c] = seedColor;
 
                 }
             }
         }
     }
 
- */
+
 
 
 
