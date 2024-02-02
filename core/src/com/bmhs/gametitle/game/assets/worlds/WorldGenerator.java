@@ -28,7 +28,7 @@ public class WorldGenerator {
 
 
         Vector2 mapSeed = new Vector2(MathUtils.random(worldIntMap[0].length), MathUtils.random(worldIntMap.length));
-        Vector3 mapSeed = new Vector3(MathUtils.random(worldIntMap[0].length), MathUtils.random(worldIntMap.length));
+
         System.out.println(mapSeed.y + "" + mapSeed.x);
 
         worldIntMap[(int)mapSeed.y][(int)mapSeed.x] = 4;
@@ -43,18 +43,14 @@ public class WorldGenerator {
             }
         }
 
-        randomize();
+
         //leftCoast();
         //centralSea();
         water();
-        seedMap();
-        seedIslands(5);
-        searchAndExpand(10,seedColor,lightGreen,0.25);
-        searchAndExpand(8,seedColor,16,0.75);
-        searchAndExpand(6,seedColor,15,0.65);
-        searchAndExpand(5,seedColor,14,0.55);
-        searchAndExpand(4,seedColor,13,0.45);
-        searchAndExpand(3,seedColor,12,0.35);
+        setBigIslandTiles(70,80,10000);
+        generateRandomBigIslands(7);
+
+
 
 
         generateWorldTextFile();
@@ -69,6 +65,81 @@ public class WorldGenerator {
             worldIntMap[rSeed][cSeed] = seedColor;
         }
     }
+
+    public void generateRandomIslands(int numIslands) {
+        for (int i = 0; i < numIslands; i++) {
+
+            int islandRow = (int) (Math.random() * worldMapRows);
+            int islandCol = (int) (Math.random() * worldMapColumns);
+
+
+            setIslandTiles(islandRow, islandCol);
+        }
+    }
+
+    private void setIslandTiles(int row, int col) {
+        worldIntMap[row][col] = 1;
+
+
+        setTileIfValid(row - 1, col); // Up
+        setTileIfValid(row + 1, col); // Down
+        setTileIfValid(row, col - 1); // Left
+        setTileIfValid(row, col + 1); // Right
+    }
+
+    private void setTileIfValid(int row, int col) {
+        if (row >= 0 && row < worldMapRows && col >= 0 && col < worldMapColumns) {
+            worldIntMap[row][col] = 1; // Example: 1 represents an island tile
+        }
+    }
+
+
+    public void generateRandomBigIslands(int numIslands) {
+        for (int i = 0; i < numIslands; i++) {
+            // Randomly select coordinates for the center of the island
+            int islandRow = (int) (Math.random() * worldMapRows);
+            int islandCol = (int) (Math.random() * worldMapColumns);
+
+            // Randomly determine the size of the island
+            int islandSize = (int) (Math.random() * 50) + 50; // Adjust the range as needed
+
+            // Set the tiles to represent the island
+            setBigIslandTiles(islandRow, islandCol, islandSize);
+        }
+    }
+
+
+    private void setBigIslandTiles(int row, int col, int size) {
+        int halfSize = size / 2;
+        worldIntMap[row][col] = 1;
+
+        int numPoints = size * 100;
+
+        for (int i = 0; i < numPoints; i++) {
+            double angle = Math.random() * 2 * Math.PI;
+            double distance = Math.sqrt(Math.random()) * halfSize;
+
+            int xOffset = (int) (Math.cos(angle) * distance);
+            int yOffset = (int) (Math.sin(angle) * distance);
+
+            int islandX = col + xOffset;
+            int islandY = row + yOffset;
+
+            if (islandX >= 0 && islandX < worldMapColumns && islandY >= 0 && islandY < worldMapRows) {
+                worldIntMap[islandY][islandX] = 1;
+            }
+        }
+    }
+
+
+
+
+
+
+
+
+
+
     /*
     private void searchAndExpand(int radius) {
         for(int r = 0; r < worldIntMap.length; r++) {
@@ -120,15 +191,7 @@ public class WorldGenerator {
             }
         }
     }
-    private void multipleIslands(int num) {
-        Vector3 mapSeed = new Vector3(MathUtils.random(worldIntMap[0].length), MathUtils.random(worldIntMap.length))
-        for(int r = 0; r<worldIntMap.length; r++) {
-            for(int c = 0; c < worldIntMap[r].length; c+=) {
 
-            }
-        }
-
-    }
 
 
     public String getWorld3DArrayToString() {
