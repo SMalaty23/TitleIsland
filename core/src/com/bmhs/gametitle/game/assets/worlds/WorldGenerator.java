@@ -16,305 +16,322 @@ public class WorldGenerator {
     private int worldMapRows, worldMapColumns;
 
     private int[][] worldIntMap;
+    private int seedColor,grass, lake, forestGrass, mountainDirt, dirt, ShallowWater, tree;
 
-    private int seedColor, lightGreen, Green;
 
-    public WorldGenerator (int worldMapRows, int worldMapColumns) {
+    public WorldGenerator(int worldMapRows, int worldMapColumns) {
         this.worldMapRows = worldMapRows;
         this.worldMapColumns = worldMapColumns;
 
         worldIntMap = new int[worldMapRows][worldMapColumns];
-        seedColor =10;
-        lightGreen = 17;
         //call methods to build 2D array
+
+        seedColor = 17;
+        lake = 18;
+        grass = 57;
+        forestGrass =72;
+        mountainDirt =44;
+        dirt = 45;
+        ShallowWater = 19;
+        tree = 39;
+
 
 
         Vector2 mapSeed = new Vector2(random(worldIntMap[0].length), random(worldIntMap.length));
 
         System.out.println(mapSeed.y + "" + mapSeed.x);
 
-        worldIntMap[(int)mapSeed.y][(int)mapSeed.x] = 4;
+        worldIntMap[(int) mapSeed.y][(int) mapSeed.x] = 4;
 
-        for(int r = 0; r < worldIntMap.length; r++) {
-            for(int c = 0; c < worldIntMap[r].length; c++) {
-                Vector2 tempVector = new Vector2(c,r);
-                if(tempVector.dst(mapSeed) < 10) {
+        for (int r = 0; r < worldIntMap.length; r++) {
+            for (int c = 0; c < worldIntMap[r].length; c++) {
+                Vector2 tempVector = new Vector2(c, r);
+                if (tempVector.dst(mapSeed) < 10) {
                     worldIntMap[r][c] = 0;
 
                 }
             }
         }
 
-
-        //leftCoast();
-        //centralSea();
         water();
-      //seedMap(6);
-      // createIsland(20);
-        //createIsland(20);
-        //makeIrregularIsland(worldIntMap, 70,70);
-        generateIsland(worldIntMap, 70,50);
-        addHillFeature(worldIntMap,40,40,60);
-
-
-
-
-
-
+        generateIslands(10,40);
         generateWorldTextFile();
 
         Gdx.app.error("WorldGenerator", "WorldGenerator(WorldTile[][][])");
     }
 
-    private void seedIslands(int num) {
-        for(int i = 0; i < num; i++) {
-            int rSeed = random(worldIntMap.length-1);
-            int cSeed = random(worldIntMap[0].length-1);
-            worldIntMap[rSeed][cSeed] = seedColor;
+
+    public void generateIslands(int numberOfIslands, int islandSize) {
+        for (int i = 0; i < numberOfIslands; i++) {
+            int startRow = MathUtils.random(worldIntMap.length - 1);
+            int startColumn = MathUtils.random(worldIntMap[0].length - 1);
+
+            worldIntMap[startRow][startColumn] = seedColor;
+            randomIslandExpansion(startRow, startColumn, islandSize);
         }
-    }
 
-    private void createIsland(int islandSize) {
-        // Find the center of the world map
-        int centerRow = worldMapRows / 2;
-        int centerCol = worldMapColumns / 2;
-
-        // Set the center tile of the island
-        worldIntMap[centerRow][centerCol] = 17; // Assuming 17 represents the coastline
-
-        // Randomize island size and shape
-        double maxDist = islandSize * 1.5; // Maximum distance from the center of the island
-        double maxIslandDist = Math.pow(islandSize * 0.5, 2); // Maximum distance for island influence
-
-        // Iterate over the entire map
-        for (int r = 0; r < worldMapRows; r++) {
-            for (int c = 0; c < worldMapColumns; c++) {
-                // Calculate the squared distance from the current tile to the center of the island
-                double distSquared = Math.pow(r - centerRow, 2) + Math.pow(c - centerCol, 2);
-
-                // Check if the tile is within the island's influence
-                if (distSquared <= maxIslandDist) {
-                    // Calculate the distance from the current tile to the center of the island
-                    double distance = Math.sqrt(distSquared);
-
-                    // Adjust the transition probability based on the distance from the center
-                    double transitionProbability = 2.0 - (distance / maxDist);
-
-                    // Apply randomness to the transition probability
-                    double randomFactor = 0.5; // Adjust this factor to control randomness
-                    transitionProbability += (Math.random() - 0.5) * randomFactor;
-
-                    // Check if the current tile is not already a land tile
-                    if (worldIntMap[r][c] != 17) {
-                        // Determine the type of land tile based on the transition probability
-                        if (Math.random() < transitionProbability) {
-                            worldIntMap[r][c] = 16; // Green land tile
-                        } else {
-                            worldIntMap[r][c] = 20; // Water tile
-                        }
-                    }
-                }
-            }
-        }
+        // After generating all islands, ensure they are all connected
+        connectIslands();
     }
 
 
-    private void makeIrregularIsland(int[][] islandMap, int islandSize, int numClusters) {
-        int centerX = islandMap.length / 2;
-        int centerY = islandMap[0].length / 2;
-        int maxDist = islandSize / 2; // Maximum distance from the center of the island
-        double irregularityFactor = 0.20; // Adjust this factor to control irregularity
+    private void randomIslandExpansion(int row, int column, int islandSize) {
+        for (int i = 0; i < islandSize; i++) {
+            int expandRow = MathUtils.random(-1, 1);
+            int expandColumn = MathUtils.random(-1, 1);
 
-        // Generate multiple clusters of land tiles
-        for (int cluster = 0; cluster < numClusters; cluster++) {
-            // Determine a random center for the cluster within the island area
-            int clusterCenterX = centerX + (int) (Math.random() * maxDist * 2) - maxDist;
-            int clusterCenterY = centerY + (int) (Math.random() * maxDist * 2) - maxDist;
+            int newRow = row + expandRow;
+            int newColumn = column + expandColumn;
 
-            // Generate land tiles for the cluster
-            for (int x = 0; x < islandMap.length; x++) {
-                for (int y = 0; y < islandMap[0].length; y++) {
-                    // Calculate the distance from the cluster center
-                    double distance = Math.sqrt(Math.pow(x - clusterCenterX, 2) + Math.pow(y - clusterCenterY, 2));
+            if (newRow >= 0 && newRow < worldIntMap.length && newColumn >= 0 && newColumn < worldIntMap[0].length) {
+                worldIntMap[newRow][newColumn] = seedColor;
+                row = newRow;
+                column = newColumn;
+                int expansionRadius = random(4, 7);
+                for (int tr = 0; tr < islandSize * 2; tr++) {
+                    int treeRow = MathUtils.random(row - islandSize, row + islandSize);
+                    int treeCol = MathUtils.random(column - islandSize, column + islandSize);
 
-                    // Add or remove land tiles based on irregularity factor and randomness
-                    if (distance < maxDist) {
-                        double randomness = Math.random();
-
-                        if (randomness < irregularityFactor) {
-                            islandMap[x][y] = 16; // Green land tile
-                        }
-                    }
-                }
-            }
-        }
-    }
+                    // Check if the tree location is within the island bounds
+                    if (treeRow >= 0 && treeRow < worldIntMap.length && treeCol >= 0 && treeCol < worldIntMap[0].length) {
+                        // Check if the tile is part of the island (seedColor) and not already a tree or water
+                        if (worldIntMap[treeRow][treeCol] == seedColor) {
+                            // Place a tree at this location
+                            worldIntMap[treeRow][treeCol] = tree; // Assuming 'tree' is the index representing trees
 
 
-    private void generateIsland(int[][] islandMap, int islandSize, int numClusters) {
-        int islandWidth = islandMap.length;
-        int islandHeight = islandMap[0].length;
-        double irregularityFactor = 0.2; // Adjust this factor to control irregularity
-
-        // Generate multiple clusters of land tiles
-        for (int cluster = 0; cluster < numClusters; cluster++) {
-            int centerX = (int) (Math.random() * islandWidth);
-            int centerY = (int) (Math.random() * islandHeight);
-            int maxDist = islandSize / 2; // Maximum distance from the center of the cluster
-
-            // Generate land tiles for the cluster
-            for (int x = 0; x < islandWidth; x++) {
-                for (int y = 0; y < islandHeight; y++) {
-                    // Calculate the distance from the cluster center
-                    double distance = Math.sqrt(Math.pow(x - centerX, 2) + Math.pow(y - centerY, 2));
-
-                    // Adjust the irregularity factor based on distance
-                    double adjustedFactor = irregularityFactor * (1 - distance / maxDist);
-
-                    // Add or remove land tiles based on irregularity factor and randomness
-                    if (distance < maxDist) {
-                        double randomness = Math.random();
-
-                        if (randomness < adjustedFactor) {
-                            islandMap[x][y] = 16; // Green land tile
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    private void addHillFeature(int[][] islandMap, int centerX, int centerY, int hillSize) {
-        for (int x = centerX - hillSize; x <= centerX + hillSize; x++) {
-            for (int y = centerY - hillSize; y <= centerY + hillSize; y++) {
-                // Check if the current position is within the island map bounds
-                if (x >= 0 && x < islandMap.length && y >= 0 && y < islandMap[0].length) {
-                    double distanceToCenter = Math.sqrt(Math.pow(x - centerX, 2) + Math.pow(y - centerY, 2));
-                    // Adjust the height based on the distance to the center
-                    double heightFactor = 1 - distanceToCenter / hillSize;
-                    // Add the hill feature to the island map
-                    islandMap[x][y] += (int) (10 * heightFactor);
-                }
-            }
-        }
-    }
-
-
-    private void setIslandTiles(int row, int col) {
-        worldIntMap[row][col] = 1;
-
-
-        setTileIfValid(row - 1, col); // Up
-        setTileIfValid(row + 1, col); // Down
-        setTileIfValid(row, col - 1); // Left
-        setTileIfValid(row, col + 1); // Right
-    }
-
-    private void setTileIfValid(int row, int col) {
-        if (row >= 0 && row < worldMapRows && col >= 0 && col < worldMapColumns) {
-            worldIntMap[row][col] = 1; // Example: 1 represents an island tile
-        }
-    }
-
-
-    public void seedMap(int num) {
-        for (int i = 0; i < num; i++) {
-            Vector2 mapSeed = new Vector2(random(worldIntMap[0].length), random(worldIntMap.length));
-            for (int r = 0; r < worldIntMap.length; r++) {
-                for (int c = 0; c < worldIntMap[r].length; c++) {
-                    Vector2 tempVector = new Vector2(c, r);
-                    if (tempVector.dst(mapSeed) < 10) {
-                        worldIntMap[r][c] = 56;
-                    }
-                }
-            }
-        }
-    }
-
-/*
-    private void setBigIslandTiles(int row, int col, int size) {
-        int halfSize = size / 2;
-        worldIntMap[row][col] = 1;
-
-        int numPoints = size * 100;
-
-        for (int i = 0; i < numPoints; i++) {
-            double angle = Math.random() * 2 * Math.PI;
-            double distance = Math.sqrt(Math.random()) * halfSize;
-
-            int xOffset = (int) (Math.cos(angle) * distance);
-            int yOffset = (int) (Math.sin(angle) * distance);
-
-            int islandX = col + xOffset;
-            int islandY = row + yOffset;
-
-            if (islandX >= 0 && islandX < worldMapColumns && islandY >= 0 && islandY < worldMapRows) {
-                worldIntMap[islandY][islandX] = 1;
-            }
-        }
-    }
-
-*/
-
-
-
-
-
-
-
-
-    /*
-    private void searchAndExpand(int radius) {
-        for(int r = 0; r < worldIntMap.length; r++) {
-            for(int c = 0; c < worldIntMap[r].length; c++) {
-
-                if (worldIntMap[r][c]== seedColor) {
-
-                    for(int subRow = r - radius; subRow <= r+radius; subRow++) {
-                        for(int subCol = c - radius; subCol <= c+radius; subCol++)  {
-
-                            if(subRow >= 0 && subCol >= 0 && subRow <= worldIntMap.length-1 && subCol <= worldIntMap[0].length-1 && worldIntMap[subRow][subCol] !=seedColor) {
-                                worldIntMap[subRow][subCol] = 3;
+                            //no way to make this shorter without a out of bounds error
+                            for (int r = 0; r < worldIntMap.length; r++) {
+                                for (int c = 0; c < worldIntMap[r].length; c++) {
+                                    if (worldIntMap[r][c] == seedColor) {
+                                        for (int g = 0; g < expansionRadius; g++) {
+                                            int directions = random(5, 7);
+                                            for (int j = 0; j < directions; j++) {
+                                                int direction = random(0, 8);
+                                                switch (direction) {
+                                                    case 0:
+                                                        row--;
+                                                        firstLayerGrass(row - 1, column);
+                                                        secondLayerForestGrass(row - 2, column);
+                                                        thridLayerDirt(row - 3, column);
+                                                        FourthLayerMoutainDirt(row - 4, column);
+                                                        fifthLayerShallowWater(row - 5, column);
+                                                        expandIsland(row - 1, column);
+                                                        break;
+                                                    case 1:
+                                                        column++;
+                                                        ;
+                                                        firstLayerGrass(row, column + 1);
+                                                        secondLayerForestGrass(row, column + 2);
+                                                        thridLayerDirt(row, column + 3);
+                                                        FourthLayerMoutainDirt(row, column + 4);
+                                                        fifthLayerShallowWater(row, column + 5);
+                                                        expandIsland(row, column + 1);
+                                                        break;
+                                                    case 2:
+                                                        row++;
+                                                        firstLayerGrass(row + 1, column);
+                                                        secondLayerForestGrass(row + 2, column);
+                                                        thridLayerDirt(row + 3, column);
+                                                        FourthLayerMoutainDirt(row + 4, column);
+                                                        fifthLayerShallowWater(row + 5, column);
+                                                        expandIsland(row + 1, column);
+                                                        break;
+                                                    case 3:
+                                                        column--;
+                                                        firstLayerGrass(row, column - 1);
+                                                        secondLayerForestGrass(row, column - 2);
+                                                        thridLayerDirt(row, column - 3);
+                                                        FourthLayerMoutainDirt(row, column - 4);
+                                                        fifthLayerShallowWater(row, column - 5);
+                                                        expandIsland(row, column - 1);
+                                                        break;
+                                                    case 4:
+                                                        row--;
+                                                        column--;
+                                                        firstLayerGrass(row - 1, column - 1);
+                                                        secondLayerForestGrass(row - 2, column - 2);
+                                                        thridLayerDirt(row - 3, column - 3);
+                                                        FourthLayerMoutainDirt(row - 4, column - 4);
+                                                        fifthLayerShallowWater(row - 4, column - 4);
+                                                        expandIsland(row - 1, column - 1);
+                                                        break;
+                                                    case 5:
+                                                        row--;
+                                                        column++;
+                                                        firstLayerGrass(row - 1, column + 1);
+                                                        secondLayerForestGrass(row - 1, column + 1);
+                                                        thridLayerDirt(row - 2, column + 2);
+                                                        FourthLayerMoutainDirt(row - 3, column + 3);
+                                                        fifthLayerShallowWater(row - 4, column + 4);
+                                                        expandIsland(row - 1, column + 1);
+                                                        break;
+                                                    case 6:
+                                                        row++;
+                                                        column--;
+                                                        firstLayerGrass(row + 1, column - 1);
+                                                        secondLayerForestGrass(row + 2, column - 2);
+                                                        thridLayerDirt(row + 3, column - 3);
+                                                        FourthLayerMoutainDirt(row + 4, column - 4);
+                                                        fifthLayerShallowWater(row + 5, column - 5);
+                                                        expandIsland(row + 1, column - 1);
+                                                        break;
+                                                    case 7:
+                                                        row++;
+                                                        column++;
+                                                        firstLayerGrass(row + 1, column + 1);
+                                                        secondLayerForestGrass(row + 2, column + 2);
+                                                        thridLayerDirt(row + 3, column + 3);
+                                                        FourthLayerMoutainDirt(row + 4, column + 4);
+                                                        fifthLayerShallowWater(row + 5, column + 5);
+                                                        expandIsland(row + 1, column + 1);
+                                                        break;
+                                                    case 8:
+                                                        setLake(r, c);
+                                                        break;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
                 }
-
-
             }
-
-
-
         }
     }
 
-     */
-/*
-    private void searchAndExpand(int radius, int numToFind, int numToWrite, double probability) {
+
+
+    private void connectIslands() {
+
         for (int r = 0; r < worldIntMap.length; r++) {
             for (int c = 0; c < worldIntMap[r].length; c++) {
 
-                if (worldIntMap[r][c] == numToFind) {
+                if (worldIntMap[r][c] == seedColor) {
 
-                    for (int subRow = r - radius; subRow <= r + radius; subRow++) {
-                        for (int subCol = c - radius; subCol <= c + radius; subCol++) {
-
-                            if (subRow >= 0 && subCol >= 0 && subRow <= worldIntMap.length - 1 && subCol <= worldIntMap[0].length - 1 && worldIntMap[subRow][subCol] != numToFind) {
-                                if (Math.random() < probability) {
-                                    worldIntMap[subRow][subCol] = numToWrite;
-
-
-                                }
+                    connectLandTile(r, c);
+                }
+            }
+        }
+    }
 
 
-                            }
-                        }
+    private void connectLandTile(int row, int col) {
+        for (int dr = -1; dr <= 1; dr++) {
+            for (int dc = -1; dc <= 1; dc++) {
+                int newRow = row + dr;
+                int newColumn = col + dc;
+                if (newRow >= 0 && newRow < worldIntMap.length && newColumn >= 0
+                        && newColumn < worldIntMap[row].length && !(dr == 0 && dc == 0)) {
+                    if (worldIntMap[newRow][newColumn] == seedColor) {
+
+                        connectTiles(row, col, newRow, newColumn);
                     }
                 }
             }
         }
     }
-*/
+
+
+
+    private void connectTiles(int row1, int col1, int row2, int col2) {
+
+        int dx = Math.abs(col2 - col1);
+        int dy = Math.abs(row2 - row1);
+        int sx = col1 < col2 ? 1 : -1;
+        int sy = row1 < row2 ? 1 : -1;
+        int err = dx - dy;
+
+        while (row1 != row2 || col1 != col2) {
+            worldIntMap[row1][col1] = seedColor;
+
+            int e2 = 2 * err;
+            if (e2 > -dy) {
+                err -= dy;
+                col1 += sx;
+            }
+            if (e2 < dx) {
+                err += dx;
+                row1 += sy;
+            }
+        }
+    }
+
+
+
+
+
+    private boolean isValidLocation(int row, int column) {
+        return row >= 0 && row < worldIntMap.length && column >= 0 && column < worldIntMap[0].length;
+    }
+    private void setLake(int centerRow, int centerCol) {
+
+        for (int r = centerRow - 1; r <= centerRow + 1; r++) {
+            for (int c = centerCol - 1; c <= centerCol + 1; c++) {
+                if (isValidLocation(r, c)) {
+                    worldIntMap[r][c] = lake;
+                }
+            }
+        }
+    }
+
+    private void firstLayerGrass(int centerRow, int centerCol) {
+        applyTerrain(centerRow, centerCol, grass, new int[]{seedColor, lake,grass});
+    }
+
+    private void secondLayerForestGrass(int centerRow, int centerCol) {
+        applyTerrain(centerRow, centerCol, forestGrass, new int[]{seedColor, lake, grass,forestGrass});
+    }
+
+    private void thridLayerDirt(int centerRow, int centerCol) {
+        applyTerrain(centerRow, centerCol, dirt, new int[]{seedColor, grass, lake, forestGrass,dirt});
+    }
+
+    private void FourthLayerMoutainDirt(int centerRow, int centerCol) {
+        applyTerrain(centerRow, centerCol, mountainDirt , new int[]{seedColor, grass, lake, forestGrass, dirt,mountainDirt});
+    }
+
+    private void fifthLayerShallowWater(int centerRow, int centerCol) {
+        applyTerrain(centerRow, centerCol, ShallowWater, new int[]{seedColor, grass, lake, forestGrass, dirt, mountainDirt});
+    }
+
+
+    private void expandIsland(int row, int column) {
+        if (row >= 0 && row < worldIntMap.length && column >= 0 && column < worldIntMap[row].length && worldIntMap[row][column] != seedColor) {
+            worldIntMap[row][column] = grass;
+        }
+    }
+
+
+
+    private void applyTerrain(int centerRow, int centerCol, int terrainType, int[] excludeTerrain) {
+        for (int r = centerRow - 1; r <= centerRow + 1; r++) {
+            for (int c = centerCol - 1; c <= centerCol + 1; c++) {
+
+                if (r >= 0 && r < worldIntMap.length && c >= 0 && c < worldIntMap[r].length) {
+
+                    boolean canApply = true;
+                    for (int exclude : excludeTerrain) {
+                        if (worldIntMap[r][c] == exclude) {
+                            canApply = false;
+                            break;
+                        }
+                    }
+
+                    if (canApply) {
+                        worldIntMap[r][c] = terrainType;
+                    }
+                }
+            }
+        }
+    }
+
+
+
+
+
 
 
     public String getWorld3DArrayToString() {
@@ -337,23 +354,6 @@ public class WorldGenerator {
             }
         }
     }
-
-    public void seedMap() {
-        Vector2 mapSeed = new Vector2(random(worldIntMap[0].length), random(worldIntMap.length));
-        for(int r = 0; r < worldIntMap.length; r++) {
-            for(int c = 0; c < worldIntMap[r].length; c++) {
-                Vector2 tempVector = new Vector2(c,r);
-                if(tempVector.dst(mapSeed) < 10) {
-                    worldIntMap[r][c] = seedColor;
-
-                }
-            }
-        }
-    }
-
-
-
-
 
 
 
