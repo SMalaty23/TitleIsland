@@ -70,7 +70,7 @@ public class WorldGenerator {
             randomIslandExpansion(startRow, startColumn, islandSize);
         }
 
-        // After generating all islands, ensure they are all connected
+
         connectIslands();
     }
 
@@ -92,15 +92,13 @@ public class WorldGenerator {
                     int treeRow = MathUtils.random(row - islandSize, row + islandSize);
                     int treeCol = MathUtils.random(column - islandSize, column + islandSize);
 
-                    // Check if the tree location is within the island bounds
+
                     if (treeRow >= 0 && treeRow < worldIntMap.length && treeCol >= 0 && treeCol < worldIntMap[0].length) {
-                        // Check if the tile is part of the island (seedColor) and not already a tree or water
+
                         if (worldIntMap[treeRow][treeCol] == seedColor) {
-                            // Place a tree at this location
-                            worldIntMap[treeRow][treeCol] = tree; // Assuming 'tree' is the index representing trees
 
+                            worldIntMap[treeRow][treeCol] = tree;
 
-                            //no way to make this shorter without a out of bounds error
                             for (int r = 0; r < worldIntMap.length; r++) {
                                 for (int c = 0; c < worldIntMap[r].length; c++) {
                                     if (worldIntMap[r][c] == seedColor) {
